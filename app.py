@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -16,6 +17,12 @@ BRANCHES = [
 FIELDS = ["dial", "plan", "live_int", "reg_visit", "reg_from_rm"]
 
 SHEET_TAB_NAME = "Sheet1"
+RM_TAB_NAME = "RM Details"
+
+# RM Details tab layout (row 1 = headers, data from row 2):
+# A: SL NO | B: BRANCH | C: RM NAME | D: ADDED ON
+RM_HEADERS = ["SL NO", "BRANCH", "RM NAME", "ADDED ON"]
+RM_FIRST_DATA_ROW = 2
 
 # Fixed layout on the sheet (row 3 = headers, data starts row 4):
 # A: SL NO | B: BRANCH | C: RMs NAME | D: JOINING DATE | E: DATE
@@ -41,6 +48,8 @@ SCOPES = [
 
 _client = None
 _worksheet = None
+_rm_worksheet = None
+_spreadsheet = None
 
 
 def get_worksheet():
@@ -50,7 +59,7 @@ def get_worksheet():
       GOOGLE_CREDENTIALS_JSON - full contents of the service account JSON key
       SPREADSHEET_ID          - the id from the sheet's URL
     """
-    global _client, _worksheet
+    global _client, _worksheet, _spreadsheet
     if _worksheet is not None:
         return _worksheet
 
@@ -60,9 +69,61 @@ def get_worksheet():
     info = json.loads(creds_json)
     creds = Credentials.from_service_account_info(info, scopes=SCOPES)
     _client = gspread.authorize(creds)
-    spreadsheet = _client.open_by_key(spreadsheet_id)
-    _worksheet = spreadsheet.worksheet(SHEET_TAB_NAME)
+    _spreadsheet = _client.open_by_key(spreadsheet_id)
+    _worksheet = _spreadsheet.worksheet(SHEET_TAB_NAME)
     return _worksheet
+
+
+def get_rm_worksheet():
+    """Returns the "RM Details" tab, creating it (with headers) if missing.
+
+    On first use it also copies any RMs that already exist on Sheet1 into
+    RM Details, so nothing added before this change is lost.
+    """
+    global _rm_worksheet
+    if _rm_worksheet is not None:
+        return _rm_worksheet
+
+    ws = get_worksheet()  # also initialises _spreadsheet
+    try:
+        rm_ws = _spreadsheet.worksheet(RM_TAB_NAME)
+    except gspread.WorksheetNotFound:
+        rm_ws = _spreadsheet.add_worksheet(title=RM_TAB_NAME, rows=200, cols=len(RM_HEADERS))
+        rm_ws.update("A1:D1", [RM_HEADERS])
+        rm_ws.format("A1:D1", {"textFormat": {"bold": True}})
+
+    _rm_worksheet = rm_ws
+    _backfill_rm_details(ws, rm_ws)
+    return _rm_worksheet
+
+
+def _backfill_rm_details(ws, rm_ws):
+    """One-time: copy branch+RM pairs already on Sheet1 into RM Details."""
+    existing = {
+        (r[1].strip().upper(), r[2].strip().upper())
+        for r in rm_ws.get_all_values()[RM_FIRST_DATA_ROW - 1:]
+        if len(r) >= 3
+    }
+    new_rows = []
+    for row in ws.get_all_values()[FIRST_DATA_ROW - 1:]:
+        b = row[COL_BRANCH - 1].strip() if len(row) >= COL_BRANCH else ""
+        n = row[COL_RM - 1].strip() if len(row) >= COL_RM else ""
+        if b and n and (b.upper(), n.upper()) not in existing:
+            existing.add((b.upper(), n.upper()))
+            new_rows.append([b, n])
+    if new_rows:
+        _append_rm_rows(rm_ws, new_rows)
+
+
+def _append_rm_rows(rm_ws, pairs):
+    """Appends [branch, name] pairs to RM Details with SL NO and timestamp."""
+    start = len(rm_ws.get_all_values()) + 1
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    rows = [
+        [start + i - RM_FIRST_DATA_ROW + 1, b, n, stamp]
+        for i, (b, n) in enumerate(pairs)
+    ]
+    rm_ws.update(f"A{start}:D{start + len(rows) - 1}", rows)
 
 
 def find_row(ws, branch, rm):
@@ -115,15 +176,19 @@ def api_branches():
 
 @app.route("/api/rms")
 def api_rms():
-    branch = request.args.get("branch", "")
-    ws = get_worksheet()
-    values = ws.get_all_values()
+    """Returns RM names for the selected branch only, from the RM Details tab."""
+    branch = request.args.get("branch", "").strip()
+    if not branch:
+        return jsonify([])
+    rm_ws = get_rm_worksheet()
     names = []
-    for row in values[FIRST_DATA_ROW - 1:]:
-        row_branch = row[COL_BRANCH - 1] if len(row) >= COL_BRANCH else ""
-        row_rm = row[COL_RM - 1] if len(row) >= COL_RM else ""
-        if row_branch.strip() == branch and row_rm.strip():
-            names.append(row_rm.strip())
+    seen = set()
+    for row in rm_ws.get_all_values()[RM_FIRST_DATA_ROW - 1:]:
+        row_branch = row[1].strip() if len(row) >= 2 else ""
+        row_rm = row[2].strip() if len(row) >= 3 else ""
+        if row_branch.upper() == branch.upper() and row_rm and row_rm.upper() not in seen:
+            seen.add(row_rm.upper())
+            names.append(row_rm)
     return jsonify(names)
 
 
@@ -131,13 +196,24 @@ def api_rms():
 def add_rm():
     data = request.get_json(force=True)
     branch = (data.get("branch") or "").strip()
-    name = (data.get("name") or "").strip()
+    name = " ".join((data.get("name") or "").split())  # tidy extra spaces
     if not branch or not name:
         return jsonify({"error": "branch and name are required"}), 400
+    if branch not in BRANCHES:
+        return jsonify({"error": "unknown branch"}), 400
 
-    ws = get_worksheet()
-    ensure_row(ws, branch, name)
-    return jsonify({"ok": True})
+    # 1) Save in RM Details (skip if this branch already has that RM)
+    rm_ws = get_rm_worksheet()
+    already = any(
+        len(r) >= 3 and r[1].strip().upper() == branch.upper() and r[2].strip().upper() == name.upper()
+        for r in rm_ws.get_all_values()[RM_FIRST_DATA_ROW - 1:]
+    )
+    if not already:
+        _append_rm_rows(rm_ws, [(branch, name)])
+
+    # 2) Keep the existing behaviour: create the RM's row on the report sheet
+    ensure_row(get_worksheet(), branch, name)
+    return jsonify({"ok": True, "existing": already})
 
 
 @app.route("/api/reports", methods=["GET"])

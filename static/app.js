@@ -74,17 +74,20 @@ saveRmBtn.addEventListener('click', async () => {
   if (!name) return;
   saveRmBtn.disabled = true;
   try {
-    await fetch('/api/rms', {
+    const res = await fetch('/api/rms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ branch: branchSel.value, name })
     });
+    if (!res.ok) throw new Error('bad response');
+    const result = await res.json();
     newRmName.value = '';
     addRmBox.classList.add('hidden');
     await loadRMs(branchSel.value);
-    rmSel.value = name;
-    await loadExistingReport(branchSel.value, name);
-    showMsg('RM added.', true);
+    const saved = Array.from(rmSel.options).find(o => o.value.toLowerCase() === name.replace(/\s+/g, ' ').toLowerCase());
+    if (saved) rmSel.value = saved.value;
+    await loadExistingReport(branchSel.value, rmSel.value);
+    showMsg(result.existing ? 'RM already exists for this branch — selected.' : 'RM added ✓', true);
   } catch (err) {
     showMsg('Could not add RM.', false);
   } finally {
