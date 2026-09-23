@@ -43,6 +43,27 @@ branchSel.addEventListener('change', () => {
   }
 });
 
+async function loadExistingReport(branch, rm) {
+  try {
+    const res = await fetch(`/api/reports?branch=${encodeURIComponent(branch)}&rm=${encodeURIComponent(rm)}`);
+    const data = await res.json();
+    NUMERIC_FIELDS.forEach(f => {
+      document.getElementById(f).value = data[f] ?? 0;
+    });
+  } catch (err) {
+    showMsg('Could not load existing data for this RM.', false);
+  }
+}
+
+rmSel.addEventListener('change', () => {
+  msg.textContent = '';
+  if (branchSel.value && rmSel.value) {
+    loadExistingReport(branchSel.value, rmSel.value);
+  } else {
+    NUMERIC_FIELDS.forEach(f => document.getElementById(f).value = 0);
+  }
+});
+
 addRmToggle.addEventListener('click', () => {
   if (!branchSel.value) { showMsg('Pick a branch first.', false); return; }
   addRmBox.classList.toggle('hidden');
@@ -62,6 +83,7 @@ saveRmBtn.addEventListener('click', async () => {
     addRmBox.classList.add('hidden');
     await loadRMs(branchSel.value);
     rmSel.value = name;
+    await loadExistingReport(branchSel.value, name);
     showMsg('RM added.', true);
   } catch (err) {
     showMsg('Could not add RM.', false);

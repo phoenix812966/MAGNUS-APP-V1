@@ -140,6 +140,39 @@ def add_rm():
     return jsonify({"ok": True})
 
 
+@app.route("/api/reports", methods=["GET"])
+def get_report():
+    branch = request.args.get("branch", "").strip()
+    rm = request.args.get("rm", "").strip()
+    if not branch or not rm:
+        return jsonify({"error": "branch and rm are required"}), 400
+
+    ws = get_worksheet()
+    row_num = find_row(ws, branch, rm)
+    if not row_num:
+        # no existing row yet — return zeros
+        return jsonify({f: 0 for f in FIELDS})
+
+    row = ws.row_values(row_num)
+
+    def cell(col_num):
+        return row[col_num - 1] if len(row) >= col_num else ""
+
+    def to_int(v):
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return 0
+
+    return jsonify({
+        "dial": to_int(cell(COL_DIAL)),
+        "plan": to_int(cell(COL_PLAN)),
+        "live_int": to_int(cell(COL_LIVE_INT)),
+        "reg_visit": to_int(cell(COL_REG_VISIT)),
+        "reg_from_rm": to_int(cell(COL_REG)),
+    })
+
+
 @app.route("/api/reports", methods=["POST"])
 def add_report():
     data = request.get_json(force=True)
