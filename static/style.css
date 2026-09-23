@@ -1,0 +1,48 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #f4f5f7;
+  color: #1a1a1a;
+}
+.wrap { display: flex; justify-content: center; padding: 32px 16px; }
+.card {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08);
+}
+h1 { margin: 0 0 2px; font-size: 22px; }
+.sub { margin: 0 0 20px; color: #777; font-size: 13px; }
+h2 { font-size: 15px; margin: 24px 0 10px; border-top: 1px solid #eee; padding-top: 16px; }
+label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px; color: #333; }
+select, input[type=text], input[type=number] {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.add-link { display: inline-block; margin-top: 6px; font-size: 13px; color: #2563eb; cursor: pointer; }
+.hidden { display: none; }
+#addRmBox { margin-top: 8px; }
+#addRmBox button { margin-top: 8px; width: 100%; padding: 9px; border: none; border-radius: 8px; background: #eef2ff; color: #2563eb; font-weight: 600; cursor: pointer; }
+#saveReportBtn {
+  margin-top: 22px;
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+#saveReportBtn:disabled { background: #a9c1f5; cursor: not-allowed; }
+.msg { margin-top: 12px; font-size: 14px; text-align: center; min-height: 18px; }
+.msg.ok { color: #15803d; }
+.msg.err { color: #b91c1c; }

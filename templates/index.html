@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RM Report</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>RM Report</h1>
+    <p class="sub">Field Reporting — Daily Performance Tracking</p>
+
+    <label>Branch</label>
+    <select id="branch">
+      <option value="">Select branch</option>
+      {% for b in branches %}
+      <option value="{{ b }}">{{ b }}</option>
+      {% endfor %}
+    </select>
+
+    <label>RM Name</label>
+    <select id="rm" disabled>
+      <option value="">Select branch first</option>
+    </select>
+    <span class="add-link" id="addRmToggle">+ Add new RM</span>
+    <div id="addRmBox" class="hidden">
+      <input type="text" id="newRmName" placeholder="New RM full name">
+      <button type="button" id="saveRmBtn">Save RM</button>
+    </div>
+
+    <h2>Report Details</h2>
+
+    <div class="grid">
+      <div><label>Dial</label><input type="number" id="dial" min="0" value="0"></div>
+      <div><label>Plan</label><input type="number" id="plan" min="0" value="0"></div>
+      <div><label>Live Int</label><input type="number" id="live_int" min="0" value="0"></div>
+      <div><label>Reg Visit</label><input type="number" id="reg_visit" min="0" value="0"></div>
+    </div>
+    <label>Reg From RM</label>
+    <input type="number" id="reg_from_rm" min="0" value="0">
+
+    <button type="button" id="saveReportBtn">Save Report</button>
+    <div id="msg" class="msg"></div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
