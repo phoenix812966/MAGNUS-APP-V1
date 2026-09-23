@@ -1,6 +1,5 @@
 import os
 import json
-from datetime import date
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -97,10 +96,9 @@ def ensure_row(ws, branch, rm):
 
     row_num = first_empty_row(ws)
     sl_no = row_num - FIRST_DATA_ROW + 1
-    today = date.today().strftime("%d/%m/%Y")
     ws.update(
-        f"A{row_num}:D{row_num}",
-        [[sl_no, branch, rm, today]],
+        f"A{row_num}:C{row_num}",
+        [[sl_no, branch, rm]],
     )
     return row_num
 
@@ -154,9 +152,7 @@ def add_report():
 
     ws = get_worksheet()
     row_num = ensure_row(ws, branch, rm)
-    today = date.today().strftime("%d/%m/%Y")
 
-    ws.update(f"E{row_num}", [[today]])
     ws.update(
         f"G{row_num}:K{row_num}",
         [[values["dial"], values["plan"], values["live_int"], values["reg_visit"], values["reg_from_rm"]]],
