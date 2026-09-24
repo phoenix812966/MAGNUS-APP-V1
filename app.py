@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify, render_template
 app = Flask(__name__)
 
 BRANCHES = [
-    "MANJERI", "KASARGOD", "KANNUR", "KUTTYADI", "KOZHIKODE", "TIRUR",
+    "MANJERI", "KASARGOD", "KANNUR", "KUTTIYADI", "KOZHIKODE", "TIRUR",
     "PALAKKAD", "THRISSUR", "ALAPPUZHA", "KOLLAM", "TRIVANDRUM",
     "MARTHANDAM", "NAGPUR", "HYDERABAD", "BANGALORE"
 ]
