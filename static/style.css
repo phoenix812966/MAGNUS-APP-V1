@@ -1,7 +1,7 @@
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: "Lora", Georgia, "Times New Roman", serif;
   background: #f4f5f7;
   color: #1a1a1a;
 }
@@ -46,3 +46,4 @@ select, input[type=text], input[type=number] {
 .msg { margin-top: 12px; font-size: 14px; text-align: center; min-height: 18px; }
 .msg.ok { color: #15803d; }
 .msg.err { color: #b91c1c; }
+input, select, button, textarea { font-family: inherit; }
