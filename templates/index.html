@@ -27,10 +27,16 @@
     <select id="rm" disabled>
       <option value="">Select branch first</option>
     </select>
-    <span class="add-link" id="addRmToggle">+ Add new RM</span>
-    <div id="addRmBox" class="hidden">
-      <input type="text" id="newRmName" placeholder="New RM full name">
-      <button type="button" id="saveRmBtn">Save RM</button>
+
+    <div id="statusBox" class="status hidden">
+      <div class="status-top">
+        <div class="pie" id="pie"></div>
+        <div class="status-text">
+          <div><span class="dot dot-on"></span><b id="subCount">0/0</b> Submitted</div>
+          <div><span class="dot dot-off"></span><span id="pendCount">0</span> Not Submitted</div>
+        </div>
+      </div>
+      <ul id="pendList"></ul>
     </div>
 
     <h2>Report Details</h2>
