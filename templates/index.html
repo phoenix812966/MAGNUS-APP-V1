@@ -42,12 +42,13 @@
     <h2>Report Details</h2>
 
     <div class="grid">
-      <div><label>Dial</label><input type="number" id="dial" min="0" value="0"></div>
-      <div><label>Plan</label><input type="number" id="plan" min="0" value="0"></div>
-      <div><label>Live Int</label><input type="number" id="live_int" min="0" value="0"></div>
-      <div><label>Reg Visit</label><input type="number" id="reg_visit" min="0" value="0"></div>
+      <div><label>Today Dial</label><input type="number" id="dial" min="0" value="0"></div>
+      <div><label>Today Plan</label><input type="number" id="plan" min="0" value="0"></div>
+      <div><label>Live Int</label><span class="field-note field-note-current">Current</span><input type="number" id="live_int" min="0" value="0"></div>
+      <div><label>Reg Visit</label><span class="field-note">(24/09/2026 TO TODAY)</span><input type="number" id="reg_visit" min="0" value="0"></div>
     </div>
     <label>Reg From RM</label>
+    <span class="field-note">(24/09/2026 TO TODAY)</span>
     <input type="number" id="reg_from_rm" min="0" value="0">
 
     <button type="button" id="saveReportBtn">Save Report</button>

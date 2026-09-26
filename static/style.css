@@ -26,6 +26,8 @@ select, input[type=text], input[type=number] {
   border-radius: 8px;
 }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.field-note { display: block; font-size: 11px; color: #9ca3af; margin: -2px 0 4px; font-weight: 400; }
+.field-note-current { color: #6b7280; font-weight: 500; }
 .hidden { display: none; }
 #saveReportBtn {
   margin-top: 22px;
